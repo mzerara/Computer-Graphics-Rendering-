@@ -1,0 +1,11 @@
+#version 400
+
+in vec3 vp;
+uniform mat4 translation_matrix, projection_matrix, rotation_matrix;
+out vec3 EyePos;
+
+void main () 
+{
+EyePos = (translation_matrix * vec4(vp,1)).xyz;
+gl_Position = projection_matrix*translation_matrix*vec4 (vp, 1);
+}

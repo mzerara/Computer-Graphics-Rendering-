@@ -1,0 +1,64 @@
+#version 400
+
+in vec3 EyePos;
+out vec4 frag_colour;
+uniform vec4 VC;
+uniform mat4 translation_matrix;
+uniform vec4 lightStateValue;
+
+
+float lightState = lightStateValue[0];
+
+
+// fixed point light properties
+vec3 light_position_world = vec3 (0.0, 0.0, 2.0);
+uniform vec3 La; // = vec3 (0.2, 0.0, 0.2); 
+uniform vec3 Ld; // = vec3 (0.7, 0.7, 0.7);
+uniform vec3 Ls; // = vec3 (1.0, 1.0, 1.0); 
+
+// surface reflectance
+vec3 Ka = vec3 (1.0, 1.0, 1.0); //fully reflect ambient light
+vec3 Kd = vec3 (1.0, 0.0, 1.0); //orange diffuse surface reflectance
+vec3 Ks = vec3 (1.0, 1.0, 1.0); //fully reflect specular light
+float specular_exponent = 100.0;
+
+void main () 
+{
+
+//ambient intensity
+vec3 Ia = La * Ka;
+
+//diffuse intensity
+vec3 light_position_eye = vec3 (translation_matrix * vec4 (light_position_world, 1.0));//raise light position to eye space
+vec3 distance_to_light_eye = light_position_eye - EyePos;
+vec3 direction_to_light_eye = normalize (distance_to_light_eye);
+vec3 Normals = normalize(cross(dFdy(EyePos), dFdx(EyePos)));
+Normals *= -1.0;
+float dot_prod = dot (direction_to_light_eye, Normals);
+dot_prod = max (dot_prod, 0.0);
+vec3 Id = Ld * Kd * dot_prod; 
+
+//specular intensity
+vec3 reflection_eye = reflect (-direction_to_light_eye, Normals);
+vec3 surface_to_viewer_eye = normalize (-EyePos);
+float dot_prod_specular = dot (reflection_eye, surface_to_viewer_eye);
+dot_prod_specular = max (dot_prod_specular, 0.0);
+float specular_factor = pow (dot_prod_specular, specular_exponent);
+vec3 Is = Ls * Ks * specular_factor; 
+
+
+
+if (lightState==1)
+{
+//final colour
+frag_colour = vec4 (Ia + Id + Is, 1.0);
+}
+
+if (lightState==0)
+{
+
+frag_colour = vec4 (1.0,1.0,1.0,1.0);
+}
+
+
+};
